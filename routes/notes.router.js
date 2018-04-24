@@ -5,6 +5,8 @@ const express = require('express');
 // Create an router instance (aka "mini-app")
 const router = express.Router();
 
+const knex = require('../knex');
+
 // TEMP: Simple In-Memory Database
 const data = require('../db/notes');
 const simDB = require('../db/simDB');
@@ -13,31 +15,31 @@ const notes = simDB.initialize(data);
 // Get All (and search by query)
 router.get('/notes', (req, res, next) => {
   const { searchTerm } = req.query;
-
-  notes.filter(searchTerm)
-    .then(list => {
-      res.json(list);
+  knex('notes')
+    .select('id', 'title', 'content')
+    .modify(queryBuilder => {
+      if (searchTerm) {
+        queryBuilder.where('title', 'like', `%${searchTerm}%`);
+      }
     })
-    .catch(err => {
-      next(err);
-    });
+    .orderBy('id')
+    .then(list => res.json(list))
+    .catch(err => next(err));
 });
 
 // Get a single item
 router.get('/notes/:id', (req, res, next) => {
-  const id = req.params.id;
-
-  notes.find(id)
-    .then(item => {
-      if (item) {
-        res.json(item);
-      } else {
-        next();
+  const qid = req.params.id;
+  knex('notes')
+    .select('id','title', 'content')
+    .modify(queryBuilder => {
+      if (qid) {
+        queryBuilder.where({id: qid});
       }
     })
-    .catch(err => {
-      next(err);
-    });
+    .orderBy('id')
+    .then(list => res.json(list))
+    .catch(err => next(err));
 });
 
 // Put update an item

@@ -44,7 +44,7 @@ router.get('/notes/:id', (req, res, next) => {
 
 // Put update an item
 router.put('/notes/:id', (req, res, next) => {
-  const id = req.params.id;
+  const qid = req.params.id;
 
   /***** Never trust users - validate input *****/
   const updateObj = {};
@@ -63,17 +63,12 @@ router.put('/notes/:id', (req, res, next) => {
     return next(err);
   }
 
-  notes.update(id, updateObj)
-    .then(item => {
-      if (item) {
-        res.json(item);
-      } else {
-        next();
-      }
-    })
-    .catch(err => {
-      next(err);
-    });
+  knex('notes')
+    .update(updateObj)
+    .where({id: qid})
+    .returning(['id','title','content'])
+    .then(item => res.json(item))
+    .catch(err => {next(err);});
 });
 
 // Post (insert) an item
@@ -88,15 +83,11 @@ router.post('/notes', (req, res, next) => {
     return next(err);
   }
 
-  notes.create(newItem)
-    .then(item => {
-      if (item) {
-        res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(item);
-      }
-    })
-    .catch(err => {
-      next(err);
-    });
+  knex('notes')
+    .insert(newItem)
+    .returning(['id', 'title', 'content'])
+    .then(item => res.location(`http://${req.headers.host}/notes/${item[0].id}`).status(201).json(item))
+    .catch(err => { next(err); });
 });
 
 // Delete an item

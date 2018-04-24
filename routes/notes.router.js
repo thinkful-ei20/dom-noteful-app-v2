@@ -8,9 +8,9 @@ const router = express.Router();
 const knex = require('../knex');
 
 // TEMP: Simple In-Memory Database
-const data = require('../db/notes');
-const simDB = require('../db/simDB');
-const notes = simDB.initialize(data);
+// const data = require('../db/notes');
+// const simDB = require('../db/simDB');
+// const notes = simDB.initialize(data);
 
 // Get All (and search by query)
 router.get('/notes', (req, res, next) => {
@@ -92,15 +92,13 @@ router.post('/notes', (req, res, next) => {
 
 // Delete an item
 router.delete('/notes/:id', (req, res, next) => {
-  const id = req.params.id;
+  const qid = req.params.id;
 
-  notes.delete(id)
-    .then(() => {
-      res.sendStatus(204);
-    })
-    .catch(err => {
-      next(err);
-    });
+  knex('notes')
+    .del()
+    .where({id: qid})
+    .then(() => res.sendStatus(204))
+    .catch(err => {next(err);});
 });
 
 module.exports = router;

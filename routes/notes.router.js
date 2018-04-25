@@ -26,14 +26,14 @@ router.get('/notes', (req, res, next) => {
 router.get('/notes/:id', (req, res, next) => {
   const qid = req.params.id;
   knex('notes')
-    .select('id','title', 'content')
-    .modify(queryBuilder => {
-      if (qid) {
-        queryBuilder.where({id: qid});
+    .where('id', qid)
+    .then(result => {
+      if (result) {
+        res.json(result[0]);
+      } else {
+        next();
       }
     })
-    .orderBy('id')
-    .then(list => res.json(list))
     .catch(err => next(err));
 });
 
@@ -81,7 +81,7 @@ router.post('/notes', (req, res, next) => {
   knex('notes')
     .insert(newItem)
     .returning(['id', 'title', 'content'])
-    .then(item => res.location(`http://${req.headers.host}/notes/${item[0].id}`).status(201).json(item))
+    .then(item => res.location(`http://${req.headers.host}/api/notes/${item[0].id}`).status(201).json(item))
     .catch(err => { next(err); });
 });
 

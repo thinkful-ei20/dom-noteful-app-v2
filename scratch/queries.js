@@ -3,7 +3,6 @@
 const knex = require('../knex');
 
 knex
-  .from('notes')
+  .from('folders')
   .select()
-  .where({id: 4})
-  .then(result => console.log(result));
+  .then(results => console.log(results));
